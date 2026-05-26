@@ -71,15 +71,14 @@ export default function Home() {
         <div className="text-2xl font-black text-yellow-400">
           MaBon Music AI.com
         </div>
-
-        <nav className="hidden md:flex gap-5 text-sm text-zinc-200">
-          <a>Home</a>
-          <a>Artists</a>
-          <a>Music</a>
-          <a href="/videos">Videos</a>
-          <a>Merch</a>
-          <a>Submit Music</a>
-        </nav>
+<nav className="hidden md:flex gap-5 text-sm text-zinc-200">
+  <a href="/">Home</a>
+  <a href="/artists">Artists</a>
+  <a href="/music">Music</a>
+  <a href="/videos">Videos</a>
+  <a href="/merch">Merch</a>
+  <a href="/submit-music">Submit Music</a>
+</nav>
 
         <button
           onClick={() => setArtistOpen(!artistOpen)}
