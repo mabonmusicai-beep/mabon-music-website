@@ -93,7 +93,7 @@ export default function Home() {
         </button>
 
         {artistOpen && (
-          <div className="absolute right-6 top-16 bg-zinc-950 border border-yellow-400/30 rounded-2xl w-64 overflow-hidden">
+<div className="absolute right-0 top-10 bg-zinc-950 border border-yellow-400/30 rounded-2xl w-64 max-h-96 overflow-y-auto z-50">
             {artists.map((artist) => (
               <a
   key={artist.name}
