@@ -4,54 +4,59 @@ import { useState } from "react";
 
 const artists = [
   {
-    name: "Pondoe",
-    tag: "Founder / CEO / West Coast Pressure",
-    img: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
+    name: "Pondoe MaBon",
+    tag: "Founder / AI Artist",
+    img: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "LoLa Baggz",
-    tag: "Official MaBon Music LLC Artist",
-    img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
+    tag: "Artist / Executive Producer",
+    img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "Chinatown Nae",
-    tag: "Young Storyteller / Penitentiary Raised",
-    img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1200&auto=format&fit=crop",
+    tag: "Official MaBon Music LLC Artist",
+    img: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "Mortuary Luciano",
     tag: "Official MaBon Music LLC Artist",
-    img: "https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=1200&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "Tantrum",
     tag: "Official MaBon Music LLC Artist",
-    img: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1499364615650-ec38552f4f34?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "Little D",
     tag: "Official MaBon Music LLC Artist",
-    img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1506157786151-b8491531f063?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "Black",
     tag: "Official MaBon Music LLC Artist",
-    img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1200&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop",
   },
   {
-    name: "A.U.7.9.",
-    tag: "Egyptian Luxury / Mind Series",
-    img: "https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=1200&auto=format&fit=crop",
+    name: "A.U.7.9",
+    tag: "Official MaBon Music LLC Artist",
+    img: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "O.T.G 3 Face",
     tag: "Official MaBon Music LLC Artist",
-    img: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
   },
   {
     name: "Isaiah The Prophet",
-    tag: "11 Deuce / Essence of a Scorpio",
-    img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
+    tag: "Official MaBon Music LLC Artist",
+    img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    name: "Y.N.G.E Bavvy",
+    tag: "Official MaBon Music LLC Artist",
+    img: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1200&auto=format&fit=crop",
   },
 ];
 
