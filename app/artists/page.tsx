@@ -9,6 +9,8 @@ const artists = [
   { name: "A.U.7.9.", slug: "au79" },
   { name: "O.T.G 3 Face", slug: "otg-3-face" },
   { name: "Isaiah The Prophet", slug: "isaiah-the-prophet" },
+  { name: "Y.N.G.E Bavvy", slug: "ynge-bavvy" },
+
 ];
 
 export default function ArtistsPage() {
