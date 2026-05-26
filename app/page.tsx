@@ -54,6 +54,11 @@ const artists = [
     img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1200&auto=format&fit=crop",
   },
   {
+  name: "Ryan Carter",
+  tag: "Executive • Manager • A&R",
+  img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1200&auto=format&fit=crop",
+},
+  {
     name: "Y.N.G.E Bavvy",
     tag: "Official MaBon Music LLC Artist",
     img: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1200&auto=format&fit=crop",
@@ -79,6 +84,7 @@ export default function Home() {
 <nav className="hidden md:flex gap-5 text-sm text-zinc-200">
   <a href="/">Home</a>
   <a href="/artists">Artists</a>
+  <a href="/team/ryan-carter">Team</a>
   <a href="/music">Music</a>
   <a href="/videos">Videos</a>
   <a href="/merch">Merch</a>
