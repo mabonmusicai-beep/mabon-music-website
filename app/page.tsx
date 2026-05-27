@@ -103,7 +103,15 @@ export default function Home() {
             {artists.map((artist) => (
               <a
   key={artist.name}
-  href={artist.name === "Pondoe" ? "/artists/pondoe" : "/artists"}
+  href={
+  artist.name === "Pondoe"
+    ? "/artists/pondoe"
+    : artist.name === "LoLa Baggz"
+    ? "/artists/lola-baggz"
+    : artist.name === "Ryan Carter"
+    ? "/team/ryan-carter"
+    : "/artists"
+}
   className="block px-4 py-3 border-b border-white/10 hover:bg-red-700/30"
 >
   <p className="font-bold">{artist.name}</p>
