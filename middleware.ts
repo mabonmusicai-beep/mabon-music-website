@@ -4,11 +4,11 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  if (pathname.startsWith("/admin")) {
-    const auth = request.cookies.get("mabon_admin");
+  if (pathname.startsWith("/admin/submissions")) {
+    const auth = request.cookies.get("mabon_admin")?.value;
 
-    if (!auth) {
-      return NextResponse.redirect(new URL("/", request.url));
+    if (auth !== "approved") {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   }
 
@@ -16,5 +16,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/submissions/:path*"],
 };
