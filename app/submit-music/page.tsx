@@ -9,10 +9,14 @@ export default function SubmitMusicPage() {
         Submit Music to MaBon Music LLC
       </h1>
 
-      <p className="text-zinc-300 mt-4 max-w-3xl">
-        New and existing artists may submit MP3 or WAV music files for professional review by MaBon Music LLC.
-      </p>
-
+      <p className="text-zinc-300 mt-4 max-w-3xl leading-8">
+  New and existing artists may submit MP3 or WAV music files for professional review by MaBon Music LLC.
+  Submissions are reviewed through the MaBon Music Artist Development process. Not every submission
+  will be approved for release immediately, but artists may receive constructive feedback,
+  development notes, revision suggestions, or an invitation to resubmit improved material.
+  Our goal is to help serious artists grow, refine their sound, and align with the creative
+  direction of MaBon Music LLC.
+</p>
       <form
         action="https://formsubmit.co/mabonmusicai@gmail.com"
         method="POST"
@@ -38,7 +42,18 @@ export default function SubmitMusicPage() {
         <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="songTitle" placeholder="Song Title" required />
 
         <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="genre" placeholder="Genre" required />
-
+<select
+  className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30"
+  name="submissionGoal"
+  required
+>
+  <option value="">What are you submitting for?</option>
+  <option>Label Signing Consideration</option>
+  <option>Release Review for Existing Artist</option>
+  <option>Artist Development Feedback</option>
+  <option>Feature / Collaboration Consideration</option>
+  <option>Songwriter / Producer Review</option>
+</select>
         <label className="block text-yellow-400 font-bold">
           Upload MP3 or WAV File
         </label>
