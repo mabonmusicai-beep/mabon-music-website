@@ -279,9 +279,12 @@ export default function Home() {
               Artists can upload tracks, lyrics, videos, press kits, and social
               links for professional review.
             </p>
-            <button className="bg-white text-black px-6 py-3 rounded-full font-bold">
-              Start Submission
-            </button>
+            <a
+  href="/submit-music"
+  className="bg-white text-black px-6 py-3 rounded-full font-bold inline-block"
+>
+  Start Submission
+</a>
           </div>
 
           <div className="bg-black/40 rounded-2xl p-5 border border-red-900/40">
