@@ -1,51 +1,62 @@
 "use client";
 
-import { useState } from "react";
-
 export default function SubmitMusicPage() {
-  const [submitted, setSubmitted] = useState(false);
-
   return (
     <main className="min-h-screen bg-black text-white p-10">
-      <a href="/" className="text-yellow-400">
-        ← Back to Home
-      </a>
+      <a href="/" className="text-yellow-400">← Back to Home</a>
 
       <h1 className="text-5xl font-black mt-10">
         Submit Music to MaBon Music LLC
       </h1>
 
-      <p className="text-zinc-300 mt-4 max-w-2xl">
-        Artists can submit music, lyrics, videos, press kits, and social links
-        for professional review.
+      <p className="text-zinc-300 mt-4 max-w-3xl">
+        New and existing artists may submit MP3 or WAV music files for professional review by MaBon Music LLC.
       </p>
 
-      {submitted && (
-        <div className="mt-6 rounded-xl border border-yellow-400/30 bg-green-950/40 p-4 text-green-300">
-          Thank you. Your submission preview has been received. A real upload
-          system will be connected before public launch.
-        </div>
-      )}
-
       <form
-        className="mt-10 max-w-2xl space-y-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setSubmitted(true);
-        }}
+        action="https://formsubmit.co/mabonmusicai@gmail.com"
+        method="POST"
+        encType="multipart/form-data"
+        className="mt-10 max-w-3xl space-y-5"
       >
-        <input className="w-full rounded-xl bg-zinc-900 p-4" placeholder="Artist Name" required />
-        <input className="w-full rounded-xl bg-zinc-900 p-4" placeholder="Email Address" type="email" required />
-        <input className="w-full rounded-xl bg-zinc-900 p-4" placeholder="Phone Number" />
-        <input className="w-full rounded-xl bg-zinc-900 p-4" placeholder="Social Media Links" />
-        <textarea className="w-full rounded-xl bg-zinc-900 p-4 h-32" placeholder="Tell MaBon Music LLC about your submission" />
-        <input className="w-full rounded-xl bg-zinc-900 p-4" type="file" />
+        <input type="hidden" name="_subject" value="New Music Submission - MaBon Music LLC" />
+        <input type="hidden" name="_captcha" value="false" />
 
-        <button
-          type="submit"
-          className="bg-gradient-to-r from-red-700 via-red-600 to-yellow-500 px-6 py-3 rounded-full font-bold"
-        >
-          Submit for Review
+        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="artistName" placeholder="Artist Name" required />
+
+        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="email" type="email" placeholder="Artist Email" required />
+
+        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="phone" placeholder="Phone Number" />
+
+        <select className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="artistStatus" required>
+          <option value="">Select Artist Status</option>
+          <option>New Artist Seeking Review</option>
+          <option>Signed MaBon Music LLC Artist</option>
+          <option>Producer / Songwriter Submission</option>
+        </select>
+
+        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="songTitle" placeholder="Song Title" required />
+
+        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="genre" placeholder="Genre" required />
+
+        <label className="block text-yellow-400 font-bold">
+          Upload MP3 or WAV File
+        </label>
+
+        <input
+          className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30"
+          name="musicFile"
+          type="file"
+          accept=".mp3,.wav,audio/mpeg,audio/wav"
+          required
+        />
+
+        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="musicLink" placeholder="Backup Music Link: Google Drive, Dropbox, SoundCloud, etc." />
+
+        <textarea className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30 min-h-40" name="message" placeholder="Tell us about the song, project, artist, or release request." />
+
+        <button className="bg-gradient-to-r from-red-700 via-red-600 to-yellow-500 px-8 py-4 rounded-full font-black">
+          Submit Music for Review
         </button>
       </form>
     </main>
