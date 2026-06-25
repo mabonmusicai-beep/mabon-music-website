@@ -17,6 +17,15 @@ type Submission = {
   score: number;
   development_notes: string;
   created_at: string;
+  lyrics_score: number;
+  delivery_score: number;
+  hook_score: number;
+  mix_quality_score: number;
+  originality_score: number;
+  commercial_score: number;
+  brand_score: number;
+  mman_score: number;
+  mman_report: string;
 };
 
 export default function SubmissionsDashboardPage() {
@@ -29,11 +38,62 @@ export default function SubmissionsDashboardPage() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setSubmissions(data);
+    if (!error && data) setSubmissions(data);
+    setLoading(false);
+  }
+
+  function calculateMMAN(submission: Submission) {
+    const total =
+      Number(submission.lyrics_score || 0) +
+      Number(submission.delivery_score || 0) +
+      Number(submission.hook_score || 0) +
+      Number(submission.mix_quality_score || 0) +
+      Number(submission.originality_score || 0) +
+      Number(submission.commercial_score || 0) +
+      Number(submission.brand_score || 0);
+
+    return Math.round(total / 7);
+  }
+
+  async function updateField(id: number, field: keyof Submission, value: string | number) {
+    const { error } = await supabase
+      .from("artist_submissions")
+      .update({ [field]: value })
+      .eq("id", id);
+
+    if (error) {
+      alert("Update failed.");
+      return;
     }
 
-    setLoading(false);
+    loadSubmissions();
+  }
+
+  async function saveMMAN(submission: Submission) {
+    const mmanScore = calculateMMAN(submission);
+
+    const { error } = await supabase
+      .from("artist_submissions")
+      .update({
+        lyrics_score: submission.lyrics_score || 0,
+        delivery_score: submission.delivery_score || 0,
+        hook_score: submission.hook_score || 0,
+        mix_quality_score: submission.mix_quality_score || 0,
+        originality_score: submission.originality_score || 0,
+        commercial_score: submission.commercial_score || 0,
+        brand_score: submission.brand_score || 0,
+        mman_score: mmanScore,
+        mman_report: submission.mman_report || "",
+      })
+      .eq("id", submission.id);
+
+    if (error) {
+      alert("MMAN save failed.");
+      return;
+    }
+
+    alert("MMAN analysis saved.");
+    loadSubmissions();
   }
 
   async function updateStatus(id: number, status: string) {
@@ -50,6 +110,14 @@ export default function SubmissionsDashboardPage() {
     loadSubmissions();
   }
 
+  function localUpdate(id: number, field: keyof Submission, value: string | number) {
+    setSubmissions((current) =>
+      current.map((submission) =>
+        submission.id === id ? { ...submission, [field]: value } : submission
+      )
+    );
+  }
+
   useEffect(() => {
     loadSubmissions();
   }, []);
@@ -62,14 +130,15 @@ export default function SubmissionsDashboardPage() {
         MaBon Music Artist Development Dashboard
       </h1>
 
-      <p className="text-zinc-300 mt-4 max-w-3xl leading-8">
-        Review artist submissions, score music, provide development feedback,
-        request revisions, approve release candidates, and track artist growth.
+      <p className="text-zinc-300 mt-4 max-w-4xl leading-8">
+        Review artist submissions, score music through the MMAN system, provide
+        development feedback, request revisions, approve release candidates, and
+        track artist growth.
       </p>
 
       {loading && <p className="mt-10 text-yellow-400">Loading submissions...</p>}
 
-      <section className="mt-12 space-y-6">
+      <section className="mt-12 space-y-8">
         {submissions.map((submission) => (
           <div
             key={submission.id}
@@ -89,6 +158,11 @@ export default function SubmissionsDashboardPage() {
                 <p className="text-2xl font-black text-yellow-400">
                   {submission.status || "Submitted"}
                 </p>
+
+                <p className="text-zinc-400 mt-5">MMAN Score</p>
+                <p className="text-5xl font-black text-yellow-400">
+                  {submission.mman_score || calculateMMAN(submission)}
+                </p>
               </div>
             </div>
 
@@ -103,13 +177,68 @@ export default function SubmissionsDashboardPage() {
               <a
                 href={submission.backup_link}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block mt-5 text-yellow-400 underline"
               >
                 Open Music Link
               </a>
             )}
 
-            <div className="flex flex-wrap gap-3 mt-6">
+            <div className="grid md:grid-cols-4 gap-4 mt-8">
+              {[
+                ["lyrics_score", "Lyrics"],
+                ["delivery_score", "Delivery"],
+                ["hook_score", "Hook"],
+                ["mix_quality_score", "Mix Quality"],
+                ["originality_score", "Originality"],
+                ["commercial_score", "Commercial"],
+                ["brand_score", "Brand"],
+              ].map(([field, label]) => (
+                <div
+                  key={field}
+                  className="bg-black border border-yellow-400/20 rounded-2xl p-4"
+                >
+                  <label className="text-zinc-300 block mb-2">{label}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={Number(submission[field as keyof Submission] || 0)}
+                    onChange={(e) =>
+                      localUpdate(
+                        submission.id,
+                        field as keyof Submission,
+                        Number(e.target.value)
+                      )
+                    }
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6">
+              <label className="text-xl font-bold block mb-3">
+                MMAN Development Report
+              </label>
+              <textarea
+                value={submission.mman_report || ""}
+                onChange={(e) =>
+                  localUpdate(submission.id, "mman_report", e.target.value)
+                }
+                placeholder="Write MaBon Music MMAN analysis, strengths, weaknesses, revision notes, and recommendation..."
+                className="w-full min-h-40 bg-black border border-yellow-400/20 rounded-2xl p-5 text-white"
+              />
+            </div>
+
+            <button
+              onClick={() => saveMMAN(submission)}
+              className="mt-5 bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 rounded-full font-black"
+            >
+              Save MMAN Analysis
+            </button>
+
+            <div className="flex flex-wrap gap-3 mt-8">
               <button
                 onClick={() => updateStatus(submission.id, "Approved")}
                 className="bg-green-700 px-5 py-3 rounded-full font-bold"
