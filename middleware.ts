@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/admin/submissions")) {
     const auth = request.cookies.get("mabon_admin")?.value;
 
-    if (auth !== "approved") {
+    if (auth !== process.env.ADMIN_SESSION_TOKEN) {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
   }

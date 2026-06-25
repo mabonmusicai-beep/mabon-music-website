@@ -5,9 +5,16 @@ import { useState } from "react";
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
 
-  function login() {
-    if (password === "Mabon2026!") {
-      document.cookie = "mabon_admin=approved; path=/";
+  async function login() {
+    const response = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password }),
+    });
+
+    if (response.ok) {
       window.location.href = "/admin/submissions";
     } else {
       alert("Incorrect password.");
@@ -15,7 +22,7 @@ export default function AdminLogin() {
   }
 
   return (
-    <main className="min-h-screen bg-black flex items-center justify-center">
+    <main className="min-h-screen bg-black flex items-center justify-center p-6">
       <div className="bg-zinc-950 border border-yellow-500/20 rounded-3xl p-10 w-full max-w-md">
         <h1 className="text-4xl font-black text-white mb-2">
           MaBon Staff Login
@@ -30,12 +37,12 @@ export default function AdminLogin() {
           placeholder="Staff Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-4 rounded-xl bg-black border border-zinc-700 text-white"
+          className="w-full p-4 rounded-xl bg-black border border-zinc-700 text-white mb-6"
         />
 
         <button
           onClick={login}
-          className="w-full mt-6 bg-yellow-500 text-black font-bold rounded-xl py-4"
+          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl py-4 transition"
         >
           Login
         </button>
