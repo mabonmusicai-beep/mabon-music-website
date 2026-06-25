@@ -31,15 +31,21 @@ type Submission = {
 export default function SubmissionsDashboardPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-
+const [errorMessage, setErrorMessage] = useState("");
   async function loadSubmissions() {
     const { data, error } = await supabase
       .from("artist_submissions")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) setSubmissions(data);
-    setLoading(false);
+    if (error) {
+  setErrorMessage(error.message);
+  console.error("Supabase load error:", error);
+} else if (data) {
+  setSubmissions(data);
+}
+
+setLoading(false);
   }
 
   function calculateMMAN(submission: Submission) {
@@ -137,7 +143,18 @@ export default function SubmissionsDashboardPage() {
       </p>
 
       {loading && <p className="mt-10 text-yellow-400">Loading submissions...</p>}
+{errorMessage && (
+  <div className="mt-10 bg-red-950 border border-red-700 rounded-2xl p-5 text-red-200">
+    <h2 className="text-xl font-bold">Dashboard Load Error</h2>
+    <p className="mt-2">{errorMessage}</p>
+  </div>
+)}
 
+{!loading && !errorMessage && submissions.length === 0 && (
+  <div className="mt-10 bg-zinc-950 border border-yellow-500/20 rounded-2xl p-5 text-zinc-300">
+    No submissions found. Check Supabase data and environment variables.
+  </div>
+)}
       <section className="mt-12 space-y-8">
         {submissions.map((submission) => (
           <div
