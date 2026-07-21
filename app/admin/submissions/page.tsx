@@ -13,6 +13,10 @@ type Submission = {
   submission_goal: string;
   backup_link: string;
   artist_message: string;
+  submitted_lyrics: string | null;
+  audio_file_path: string | null;
+  audio_file_name: string | null;
+  audio_file_type: string | null;
   status: string;
   created_at: string;
 };
@@ -67,23 +71,7 @@ function listenToAudio(filePath: string) {
   useEffect(() => {
     loadSubmissions();
   }, []);
-async function listenToAudio(audioFilePath: string | null) {
-  if (!audioFilePath) {
-    alert("No audio file is attached to this submission.");
-    return;
-  }
 
-  const { data, error } = await supabase.storage
-    .from("artist-submissions")
-    .createSignedUrl(audioFilePath, 3600);
-
-  if (error || !data?.signedUrl) {
-    alert(`Unable to open audio: ${error?.message || "Unknown error"}`);
-    return;
-  }
-
-  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-}
   return (
     <main className="min-h-screen bg-black text-white p-10">
       <a href="/" className="text-yellow-400">← Back to Home</a>
@@ -139,7 +127,7 @@ async function listenToAudio(audioFilePath: string | null) {
   {submission.audio_file_path ? (
     <button
       type="button"
-      onClick={() => listenToAudio(submission.audio_file_path)}
+     onClick={() => listenToAudio(submission.audio_file_path!)}
       className="rounded-full bg-gradient-to-r from-red-700 via-red-600 to-yellow-500 px-6 py-3 font-black text-black"
     >
       ▶ Play / Listen
