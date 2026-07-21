@@ -21,7 +21,17 @@ export default function SubmissionsDashboardPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+function listenToAudio(filePath: string) {
+  const { data } = supabase.storage
+    .from("artist-submissions")
+    .getPublicUrl(filePath);
 
+  if (data?.publicUrl) {
+    window.open(data.publicUrl, "_blank");
+  } else {
+    alert("Unable to open audio file.");
+  }
+}
   async function loadSubmissions() {
     setLoading(true);
     setErrorMessage("");
@@ -57,7 +67,23 @@ export default function SubmissionsDashboardPage() {
   useEffect(() => {
     loadSubmissions();
   }, []);
+async function listenToAudio(audioFilePath: string | null) {
+  if (!audioFilePath) {
+    alert("No audio file is attached to this submission.");
+    return;
+  }
 
+  const { data, error } = await supabase.storage
+    .from("artist-submissions")
+    .createSignedUrl(audioFilePath, 3600);
+
+  if (error || !data?.signedUrl) {
+    alert(`Unable to open audio: ${error?.message || "Unknown error"}`);
+    return;
+  }
+
+  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+}
   return (
     <main className="min-h-screen bg-black text-white p-10">
       <a href="/" className="text-yellow-400">← Back to Home</a>
@@ -109,7 +135,27 @@ export default function SubmissionsDashboardPage() {
                 </p>
                 <p className="text-zinc-400">{submission.phone_number}</p>
               </div>
+<div className="mt-4">
+  {submission.audio_file_path ? (
+    <button
+      type="button"
+      onClick={() => listenToAudio(submission.audio_file_path)}
+      className="rounded-full bg-gradient-to-r from-red-700 via-red-600 to-yellow-500 px-6 py-3 font-black text-black"
+    >
+      ▶ Play / Listen
+    </button>
+  ) : (
+    <p className="text-sm text-zinc-500">
+      No audio file attached
+    </p>
+  )}
 
+  {submission.audio_file_name && (
+    <p className="mt-2 text-sm text-zinc-400">
+      File: {submission.audio_file_name}
+    </p>
+  )}
+</div>
               <div className="text-right">
                 <p className="text-zinc-400">Status</p>
                 <p className="text-2xl font-black text-yellow-400">

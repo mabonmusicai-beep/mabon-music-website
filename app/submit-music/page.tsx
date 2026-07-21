@@ -1,117 +1,175 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function SubmitMusicPage() {
-  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
+async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
 
-    const form = event.currentTarget;
-    const formData = new FormData(form);
+  const form = e.currentTarget;
+  const formData = new FormData(form);
 
-    const submission = {
-      artist_name: String(formData.get("artistName") || ""),
-      artist_email: String(formData.get("email") || ""),
-      phone_number: String(formData.get("phone") || ""),
-      song_title: String(formData.get("songTitle") || ""),
-      genre: String(formData.get("genre") || ""),
-      submission_goal: String(formData.get("submissionGoal") || ""),
-      backup_link: String(formData.get("musicLink") || ""),
-      artist_message: String(formData.get("message") || ""),
-      status: "Submitted",
-      score: 0,
-      development_notes: "",
-    };
+  const audioFile = formData.get("audio_file") as File | null;
 
-    const { error } = await supabase
-      .from("artist_submissions")
-      .insert([submission]);
+  const submittedLyrics = String(
+    formData.get("submitted_lyrics") || ""
+  ).trim();
 
+  const hasAudio = Boolean(audioFile && audioFile.size > 0);
+  const hasLyrics = submittedLyrics.length > 0;
+
+  if (!hasAudio && !hasLyrics) {
+    setMessage(
+      "Please upload an audio file, enter written lyrics, or provide both."
+    );
     setLoading(false);
+    return;
+  }
 
-    if (error) {
-      alert("Submission failed. Please try again or email mabonmusicai@gmail.com.");
-      console.error(error);
+  let audioFilePath = "";
+  let audioFileName = "";
+  let audioFileType = "";
+
+  if (audioFile && audioFile.size > 0) {
+    audioFileName = audioFile.name;
+    audioFileType = audioFile.type;
+
+    const safeName = audioFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    audioFilePath = `${Date.now()}-${safeName}`;
+
+    const uploadResult = await supabase.storage
+      .from("artist-submissions")
+      .upload(audioFilePath, audioFile, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: audioFile.type,
+      });
+
+    if (uploadResult.error) {
+      setMessage(`Audio upload failed: ${uploadResult.error.message}`);
+      setLoading(false);
       return;
     }
+  }
 
-    setSubmitted(true);
+  const { error } = await supabase.from("artist_submissions").insert({
+    artist_name: formData.get("artist_name"),
+    artist_email: formData.get("artist_email"),
+    phone_number: formData.get("phone_number"),
+    song_title: formData.get("song_title"),
+    genre: formData.get("genre"),
+    submission_goal: formData.get("submission_goal"),
+    backup_link: formData.get("backup_link"),
+    artist_message: formData.get("message"),
+    submitted_lyrics: submittedLyrics,
+    audio_file_path: audioFilePath || null,
+    audio_file_name: audioFileName || null,
+    audio_file_type: audioFileType || null,
+    status: "Submitted",
+  });
+
+  if (error) {
+    setMessage(`Submission failed: ${error.message}`);
+  } else {
+    setMessage(
+      hasAudio && hasLyrics
+        ? "Submission received. Audio and written lyrics were uploaded successfully."
+        : hasAudio
+          ? "Submission received. Audio file uploaded successfully."
+          : "Submission received. Written lyrics submitted successfully."
+    );
+
     form.reset();
   }
 
+  setLoading(false);
+}
+
   return (
-    <main className="min-h-screen bg-black text-white p-10">
+    <main className="min-h-screen bg-zinc-950 text-white px-8 py-10">
       <a href="/" className="text-yellow-400">← Back to Home</a>
 
-      <h1 className="text-5xl font-black mt-10">
+      <h1 className="text-5xl font-black mt-10 mb-6">
         Submit Music to MaBon Music LLC
       </h1>
 
-      <p className="text-zinc-300 mt-4 max-w-3xl leading-8">
+      <p className="max-w-4xl text-zinc-200 mb-8">
         New and existing artists may submit MP3 or WAV music files for professional review by MaBon Music LLC.
-        Submissions are reviewed through the MaBon Music Artist Development process. Not every submission
-        will be approved for release immediately, but artists may receive constructive feedback,
-        development notes, revision suggestions, or an invitation to resubmit improved material.
       </p>
 
-      {submitted && (
-        <div className="mt-6 rounded-xl border border-green-400/40 bg-green-950/40 p-4 text-green-300 max-w-3xl">
-          Submission received. MaBon Music LLC will review your material through the Artist Development process.
+      {message && (
+        <div className="mb-6 rounded border border-green-500/60 bg-green-950/40 p-4 text-green-300">
+          {message}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="mt-10 max-w-3xl space-y-5">
-        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="artistName" placeholder="Artist Name" required />
-        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="email" type="email" placeholder="Artist Email" required />
-        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="phone" placeholder="Phone Number" />
+      <form onSubmit={handleSubmit} className="max-w-4xl space-y-4">
+        <input name="artist_name" required placeholder="Artist Name" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" />
+        <input name="artist_email" required type="email" placeholder="Artist Email" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" />
+        <input name="phone_number" placeholder="Phone Number" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" />
 
-        <select className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="artistStatus" required>
+        <select name="artist_status" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30">
           <option value="">Select Artist Status</option>
-          <option>New Artist Seeking Review</option>
-          <option>Signed MaBon Music LLC Artist</option>
-          <option>Producer / Songwriter Submission</option>
+          <option>New Artist</option>
+          <option>Existing Artist</option>
+          <option>Signed Artist</option>
+          <option>Producer / Songwriter</option>
         </select>
 
-        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="songTitle" placeholder="Song Title" required />
-        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="genre" placeholder="Genre" required />
+        <input name="song_title" required placeholder="Song Title" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" />
+        <input name="genre" placeholder="Genre" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" />
 
-        <select className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="submissionGoal" required>
-          <option value="">What are you submitting for?</option>
-          <option>Label Signing Consideration</option>
-          <option>Release Review for Existing Artist</option>
+        <select name="submission_goal" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30">
+          <option value="">Select Submission Goal</option>
           <option>Artist Development Feedback</option>
-          <option>Feature / Collaboration Consideration</option>
+          <option>Label Signing Consideration</option>
           <option>Songwriter / Producer Review</option>
+          <option>Release Candidate</option>
         </select>
 
-        <label className="block text-yellow-400 font-bold">
-          Upload MP3 or WAV File
-        </label>
+        <input name="backup_link" placeholder="Backup Music Link / YouTube / SoundCloud" className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" />
 
         <input
-          className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30"
-          name="musicFile"
+          name="audio_file"
           type="file"
-          accept=".mp3,.wav,audio/mpeg,audio/wav"
+          
+          accept="audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/mp4,audio/aac,audio/ogg"
+          className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30"
         />
+<div>
+  <label className="block mb-2 text-yellow-400 font-bold">
+    Submit Written Lyrics
+  </label>
 
-        <input className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30" name="musicLink" placeholder="Backup Music Link: Google Drive, Dropbox, SoundCloud, etc." />
+  <p className="mb-3 text-sm text-zinc-400">
+    No audio file available? Type or paste the complete lyrics below.
+    Artists may also submit both lyrics and audio.
+  </p>
 
-        <textarea
-          className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30 min-h-40"
-          name="message"
-          placeholder="Tell us about the song, project, artist, release goal, and what type of feedback or review you are requesting."
-        />
+  <textarea
+    name="submitted_lyrics"
+    spellCheck={true}
+lang="en"
+    placeholder={`Paste the complete lyrics here.
 
-        <button
-          disabled={loading}
-          className="bg-gradient-to-r from-red-700 via-red-600 to-yellow-500 px-8 py-4 rounded-full font-black disabled:opacity-60"
-        >
+[Intro]
+[Verse 1]
+[Chorus]
+[Verse 2]
+[Bridge]
+[Outro]`}
+    className="min-h-80 w-full rounded border border-yellow-400/30 bg-zinc-900 p-4 font-mono text-white"
+  />
+</div>
+        <textarea name="message" placeholder="Tell us about the song." className="w-full p-4 rounded bg-zinc-900 border border-yellow-400/30 min-h-40" />
+
+        <button disabled={loading} className="bg-gradient-to-r from-red-700 via-red-600 to-yellow-500 px-8 py-4 rounded-full font-black text-black disabled:opacity-60">
           {loading ? "Submitting..." : "Submit Music for Review"}
         </button>
       </form>
