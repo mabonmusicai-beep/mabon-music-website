@@ -25,16 +25,22 @@ export default function SubmissionsDashboardPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-function listenToAudio(filePath: string) {
-  const { data } = supabase.storage
-    .from("artist-submissions")
-    .getPublicUrl(filePath);
-
-  if (data?.publicUrl) {
-    window.open(data.publicUrl, "_blank");
-  } else {
-    alert("Unable to open audio file.");
+async function listenToAudio(audioFilePath: string | null) {
+  if (!audioFilePath) {
+    alert("No audio file is attached to this submission.");
+    return;
   }
+
+  const { data, error } = await supabase.storage
+    .from("artist-submissions")
+    .createSignedUrl(audioFilePath, 3600);
+
+  if (error || !data?.signedUrl) {
+    alert(`Unable to open audio: ${error?.message || "Unknown error"}`);
+    return;
+  }
+
+  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
 }
   async function loadSubmissions() {
     setLoading(true);
