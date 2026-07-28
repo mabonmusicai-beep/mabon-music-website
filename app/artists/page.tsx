@@ -6,7 +6,7 @@ const artists = [
   { name: "Tantrum", slug: "tantrum" },
   { name: "Little D", slug: "little-d" },
   { name: "Black", slug: "black" },
-  { name: "A.U.7.9.", slug: "au79" },
+  { name: "Royalty A.U.7.9", slug: "royalty-au79" },
   { name: "O.T.G 3 Face", slug: "otg-3-face" },
   { name: "Isaiah The Prophet", slug: "isaiah-the-prophet" },
   { name: "Y.N.G.E Bavvy", slug: "ynge-bavvy" },
