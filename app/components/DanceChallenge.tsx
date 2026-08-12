@@ -250,23 +250,55 @@ const compressedBlob = new Blob([videoBytes], {
     return new Promise<number>((resolve, reject) => {
       const video = document.createElement("video");
       const objectUrl = URL.createObjectURL(file);
+      let finished = false;
+
+      function cleanup() {
+        if (!finished) {
+          finished = true;
+          URL.revokeObjectURL(objectUrl);
+        }
+      }
+
+      function finishWithDuration() {
+        const duration = video.duration;
+
+        if (Number.isFinite(duration) && duration > 0) {
+          cleanup();
+          resolve(duration);
+          return true;
+        }
+
+        return false;
+      }
 
       video.preload = "metadata";
+      video.muted = true;
 
       video.onloadedmetadata = () => {
-        const duration = video.duration;
-        URL.revokeObjectURL(objectUrl);
-        resolve(duration);
+        if (finishWithDuration()) {
+          return;
+        }
+
+        video.currentTime = 10000000;
+      };
+
+      video.ontimeupdate = () => {
+        if (finishWithDuration()) {
+          video.ontimeupdate = null;
+        }
       };
 
       video.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
+        cleanup();
         reject(
-          new Error("Unable to read video duration.")
+          new Error(
+            "Unable to verify the video length. Please try the video again."
+          )
         );
       };
 
       video.src = objectUrl;
+      video.load();
     });
   }
 async function handleVote(entryId: number) {
@@ -407,9 +439,9 @@ async function handleVote(entryId: number) {
     try {
       const duration = await getVideoDuration(videoFile);
 
-      if (duration < 55 || duration > 95) {
+      if (duration < 55 || duration > 180) {
         setSubmissionError(
-          "Dance videos should be approximately 1 minute to 1 minute 30 seconds long."
+          "Dance videos must be between approximately 1 minute and 3 minutes long."
         );
         setSubmitting(false);
         return;
@@ -594,7 +626,7 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
             you, create original choreography, and
             submit a dance video between{" "}
             <strong>
-              1 minute and 1 minute 30 seconds.
+              1 minute and 3 minutes.
             </strong>
           </p>
 
@@ -700,7 +732,7 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
 
               <p>
                 <strong>03.</strong> Record a dance
-                video between 1:00 and 1:30.
+                video between 1:00 and 3:00.
               </p>
 
               <p>
@@ -1095,7 +1127,7 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
               </label>
 
               <p className="mt-2 text-sm text-zinc-400">
-                MP4, MOV, or WebM. Video length: approximately 1:00–1:30. Larger videos will be automatically optimized for upload.
+                MP4, MOV, or WebM. Video length: approximately 1:00–3:00. Larger video files will be automatically compressed and optimized for upload.
               </p>
 
               <input
