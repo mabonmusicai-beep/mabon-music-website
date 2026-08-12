@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import DanceChallenge from "./components/DanceChallenge";
 
 const artists = [
   {
@@ -304,8 +305,9 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </section>
-      </section>
-    </main>
+              </section>
+               </section> 
+ <DanceChallenge />
+       </main>
   );
-}
+} 
