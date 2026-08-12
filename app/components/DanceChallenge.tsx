@@ -5,7 +5,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import { supabase } from "@/lib/supabaseClient";
 
-const DEADLINE = new Date("2026-09-08T23:59:59-07:00");
+const DEADLINE = new Date("2026-09-10T23:59:59-07:00");
 const SUBMISSION_LIMIT = 100;
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 
@@ -616,7 +616,7 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
             </p>
 
             <h3 className="mt-3 text-2xl font-black uppercase text-yellow-400 md:text-3xl">
-              September 8, 2026 • 11:59 PM Pacific
+              September 10, 2026 • 11:59 PM Pacific
             </h3>
           </div>
 
