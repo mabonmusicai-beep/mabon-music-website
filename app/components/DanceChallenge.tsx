@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { useEffect, useState } from "react";
+import * as UpChunk from "@mux/upchunk";
 import { supabase } from "@/lib/supabaseClient";
 
 const DEADLINE = new Date("2026-09-10T23:59:59-07:00");
 const SUBMISSION_LIMIT = 100;
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 
 type ContestSubmission = {
   id: number;
@@ -33,73 +31,6 @@ const creatorCategories = [
 ];
 
 export default function DanceChallenge() {
-    const ffmpegRef = useRef<FFmpeg | null>(null);
-
-const compressVideo = async (videoFile: File) => {
-  if (!ffmpegRef.current) {
-  ffmpegRef.current = new FFmpeg();
-}
-
-const ffmpeg = ffmpegRef.current;
-
-  if (!ffmpeg.loaded) {
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
-
-    await ffmpeg.load({
-      coreURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.js`,
-        "text/javascript"
-      ),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        "application/wasm"
-      ),
-    });
-  }
-
-  const inputName = "input-video";
-  const outputName = "compressed-video.mp4";
-
-  await ffmpeg.writeFile(inputName, await fetchFile(videoFile));
-
-  await ffmpeg.exec([
-    "-i",
-    inputName,
-    "-vf",
-    "scale=-2:720",
-    "-c:v",
-    "libx264",
-    "-preset",
-    "veryfast",
-    "-crf",
-    "30",
-    "-c:a",
-    "aac",
-    "-b:a",
-    "96k",
-    "-movflags",
-    "+faststart",
-    outputName,
-  ]);
-
-  const data = await ffmpeg.readFile(outputName);
-
-if (typeof data === "string") {
-  throw new Error("Video compression returned an invalid file.");
-}
-
-const videoBytes = new Uint8Array(data);
-
-const compressedBlob = new Blob([videoBytes], {
-  type: "video/mp4",
-});
-
-  return new File(
-    [compressedBlob],
-    `compressed-${videoFile.name.replace(/\.[^/.]+$/, "")}.mp4`,
-    { type: "video/mp4" }
-  );
-};
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -116,6 +47,7 @@ const compressedBlob = new Blob([videoBytes], {
   const [submitting, setSubmitting] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState("");
   const [submissionError, setSubmissionError] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [ageGroup, setAgeGroup] = useState("");
   const [guardianConsent, setGuardianConsent] = useState(false);
@@ -205,6 +137,13 @@ const compressedBlob = new Blob([videoBytes], {
         data.map(async (entry) => {
           if (!entry.video_file_path) {
             return entry;
+          }
+
+          if (entry.video_file_path.startsWith("mux-upload:")) {
+            return {
+              ...entry,
+              signedUrl: undefined,
+            };
           }
 
           const { data: signedData } =
@@ -369,6 +308,7 @@ async function handleVote(entryId: number) {
 
     setSubmissionMessage("");
     setSubmissionError("");
+    setUploadProgress(0);
 
     if (submissionsReceived >= SUBMISSION_LIMIT) {
       setSubmissionError(
@@ -432,7 +372,25 @@ async function handleVote(entryId: number) {
       return;
     }
 
-    
+    const dancerName = String(
+      formData.get("dancer_name") || ""
+    ).trim();
+
+    const email = String(
+      formData.get("email") || ""
+    ).trim();
+
+    const phone = String(
+      formData.get("phone") || ""
+    ).trim();
+
+    const socialHandle = String(
+      formData.get("social_handle") || ""
+    ).trim();
+
+    const songSelected = String(
+      formData.get("song_selected") || ""
+    ).trim();
 
     setSubmitting(true);
 
@@ -446,73 +404,55 @@ async function handleVote(entryId: number) {
         setSubmitting(false);
         return;
       }
-setSubmissionMessage("Preparing and compressing your video...");
 
-let fileToUpload = videoFile;
+      const submissionReference = crypto.randomUUID();
 
-try {
-  if (videoFile.size > MAX_VIDEO_SIZE) {
-    fileToUpload = await compressVideo(videoFile);
-  }
-} catch (error) {
-  console.error("Video compression failed:", error);
-  setSubmissionError(
-    "We could not prepare your video for upload. Please try again."
-  );
-  setSubmitting(false);
-  return;
-}
-
-if (fileToUpload.size > MAX_VIDEO_SIZE) {
-  setSubmissionError(
-    "Your video is still too large after automatic compression. Please try a lower-resolution recording."
-  );
-  setSubmitting(false);
-  return;
-}
-      const safeName = fileToUpload.name.replace(
-        /[^a-zA-Z0-9._-]/g,
-        "_"
+      setSubmissionMessage(
+        "Preparing your secure video upload..."
       );
 
-      const videoFilePath =
-        `dance-challenge/${Date.now()}-${safeName}`;
+      const createUploadResponse = await fetch(
+        "/api/mux/create-upload",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            submissionReference,
+          }),
+        }
+      );
 
-      const uploadResult = await supabase.storage
-        .from("artist-submissions")
-        .upload(videoFilePath, fileToUpload, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: fileToUpload.type,
-        });
+      const createUploadData =
+        await createUploadResponse.json();
 
-      if (uploadResult.error) {
+      if (
+        !createUploadResponse.ok ||
+        !createUploadData?.success ||
+        !createUploadData?.uploadId ||
+        !createUploadData?.uploadUrl
+      ) {
         setSubmissionError(
-          `Video upload failed: ${uploadResult.error.message}`
+          createUploadData?.message ||
+            "Unable to prepare the secure video upload."
         );
+        setSubmissionMessage("");
         setSubmitting(false);
         return;
       }
 
-      const dancerName = String(
-        formData.get("dancer_name") || ""
-      ).trim();
+      const muxUploadId = String(
+        createUploadData.uploadId
+      );
 
-      const email = String(
-        formData.get("email") || ""
-      ).trim();
+      const muxUploadUrl = String(
+        createUploadData.uploadUrl
+      );
 
-      const phone = String(
-        formData.get("phone") || ""
-      ).trim();
-
-      const socialHandle = String(
-        formData.get("social_handle") || ""
-      ).trim();
-
-      const songSelected = String(
-        formData.get("song_selected") || ""
-      ).trim();
+      setSubmissionMessage(
+        "Reserving your Dance Challenge entry..."
+      );
 
       const { error: insertError } = await supabase
         .from("artist_submissions")
@@ -525,9 +465,9 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
           genre: "Dance Challenge",
           submission_goal: "Dance Challenge",
 
-          backup_link: null,
+          backup_link: `mux-upload:${muxUploadId}`,
           artist_message:
-            "Official MaBon Music Dance Challenge submission.",
+            "Official MaBon Music Dance Challenge submission. Video securely uploaded to Mux for processing.",
           submitted_lyrics: null,
 
           audio_file_path: null,
@@ -540,9 +480,12 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
           social_handle: socialHandle,
           song_selected: songSelected,
 
-          video_file_path: videoFilePath,
+          video_file_path: `mux-upload:${muxUploadId}`,
           video_file_name: videoFile.name,
           video_file_type: videoFile.type,
+
+          mux_upload_id: muxUploadId,
+          mux_status: "waiting_for_upload",
 
           age_confirmed: ageGroup === "18+",
           guardian_consent:
@@ -555,34 +498,88 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
         });
 
       if (insertError) {
-        await supabase.storage
-          .from("artist-submissions")
-          .remove([videoFilePath]);
-
-        setSubmissionError(
-          `Submission failed: ${insertError.message}`
+        console.error(
+          "Dance Challenge submission save failed:",
+          insertError
         );
 
+        setSubmissionError(
+          `We could not reserve your Dance Challenge entry: ${insertError.message}`
+        );
+        setSubmissionMessage("");
         setSubmitting(false);
         return;
       }
 
       setSubmissionMessage(
-        "Your Dance Challenge submission was received successfully. MaBon Music will review your entry before it becomes eligible for the public gallery."
+        "Uploading your video securely to MaBon Music... 0%"
+      );
+
+      await new Promise<void>((resolve, reject) => {
+        const upload = UpChunk.createUpload({
+          endpoint: muxUploadUrl,
+          file: videoFile,
+          chunkSize: 5120,
+        });
+
+        upload.on("progress", (event) => {
+          const progress = Math.max(
+            0,
+            Math.min(100, Math.round(event.detail))
+          );
+
+          setUploadProgress(progress);
+          setSubmissionMessage(
+            `Uploading your video securely to MaBon Music... ${progress}%`
+          );
+        });
+
+        upload.on("success", () => {
+          setUploadProgress(100);
+          resolve();
+        });
+
+        upload.on("error", (event) => {
+          console.error(
+            "Mux video upload failed:",
+            event.detail
+          );
+
+          reject(
+            new Error(
+              "Your video upload was interrupted. Please check your connection and try again."
+            )
+          );
+        });
+      });
+
+      setSubmissionMessage(
+        "Video upload complete. Mux is securely processing your video..."
+      );
+
+      setSubmissionMessage(
+        "Your Dance Challenge submission was received successfully. Your video is being securely processed for online viewing and will remain private until MaBon Music reviews and approves your entry."
       );
 
       form.reset();
       setAgeGroup("");
       setGuardianConsent(false);
       setTermsAccepted(false);
+      setUploadProgress(0);
 
       await loadContestData();
     } catch (error) {
+      console.error(
+        "Dance Challenge submission failed:",
+        error
+      );
+
       setSubmissionError(
         error instanceof Error
           ? error.message
           : "Something went wrong while submitting your video."
       );
+      setSubmissionMessage("");
     }
 
     setSubmitting(false);
@@ -804,8 +801,8 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
             <p className="mx-auto mt-5 max-w-4xl text-lg leading-8 text-zinc-200">
               Qualifying videos can appear directly on
               the MaBon Music website so supporters can
-              watch and share their favorite
-              performances.
+              watch the performances and vote for their
+              favorite contestants.
             </p>
           </div>
 
@@ -1127,7 +1124,7 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
               </label>
 
               <p className="mt-2 text-sm text-zinc-400">
-                MP4, MOV, or WebM. Video length: approximately 1:00–3:00. Larger video files will be automatically compressed and optimized for upload.
+                MP4, MOV, or WebM. Video length: approximately 1:00–3:00. Large video files are uploaded securely and automatically processed and optimized for online playback.
               </p>
 
               <input
@@ -1168,7 +1165,9 @@ if (fileToUpload.size > MAX_VIDEO_SIZE) {
               className="w-full rounded-xl border border-yellow-300 bg-yellow-400 px-10 py-5 text-lg font-black uppercase tracking-wide text-black shadow-lg transition duration-300 hover:-translate-y-1 hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting
-                ? "Uploading Submission..."
+                ? uploadProgress > 0
+                  ? `Uploading Video... ${uploadProgress}%`
+                  : "Preparing Submission..."
                 : submissionsReceived >=
                     SUBMISSION_LIMIT
                   ? "Submissions Full"
